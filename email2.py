@@ -14,7 +14,7 @@ import re
 # Use 'INBOX' to read inbox.  Note that whatever folder is specified, 
 # after successfully running this script all emails in that folder 
 # will be marked as read.
-EMAIL_FOLDER = "INBOX"
+EMAIL_FOLDER = ["INBOX","SENT"]
 
 
 def process_mailbox(M):
@@ -34,7 +34,7 @@ def process_mailbox(M):
             print("ERROR getting message", num)
             return
 
-        msg = email.message_from_string(data[0][1])
+        msg = email.message_from_bytes(data[0][1])
         hdr = email.header.make_header(email.header.decode_header(msg['FROM']))
         from_mail = str(hdr)
         print('Message %s: %s' % (num, from_mail))
@@ -57,14 +57,15 @@ def login_mailbox(account):
     if rv == 'OK':
         print("Mailboxes:")
         print(mailboxes)
-
-    rv, data = M.select(EMAIL_FOLDER)
-    if rv == 'OK':
-        print("Processing mailbox...\n")
-        process_mailbox(M)
-        M.close()
-    else:
-        print("ERROR: Unable to open mailbox ", rv)
+    for mailbox in EMAIL_FOLDER:
+        print(mailbox)
+        rv, data = M.select(mailbox)
+        if rv == 'OK':
+            print("Processing mailbox...\n")
+            process_mailbox(M)
+            M.close()
+        else:
+            print("ERROR: Unable to open mailbox ", rv)
 
     M.logout()
 
@@ -77,11 +78,11 @@ def main(argv):
     try:
       opts, args = getopt.getopt(argv,"hi:o:e:",["ifile=","ofile=","efile="])
     except getopt.GetoptError:
-      print sys.argv[0]," -i <inputfile> [-o <outputfile> [-e <excludefile>]]"
+      print(sys.argv[0]," -i <inputfile> [-o <outputfile> [-e <excludefile>]]")
       sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print sys.argv[0]," -i <inputfile> [-o <outputfile> [-e <excludefile>]]"
+            print(sys.argv[0]," -i <inputfile> [-o <outputfile> [-e <excludefile>]]")
             sys.exit()
         elif opt in ("-i", "--ifile"):
             inputfile = arg
@@ -90,11 +91,11 @@ def main(argv):
         elif opt in ("-e", "--efile"):
             excludefile = arg
     if inputfile == "":
-        print sys.argv[0]," -i <inputfile> [-o <outputfile> [-e <excludefile>]]"
+        print(sys.argv[0]," -i <inputfile> [-o <outputfile> [-e <excludefile>]]")
         sys.exit();
-    print "Input file is:", inputfile
-    print "Output file is:", outputfile
-    print "Exclude file is:", excludefile
+    print("Input file is:", inputfile)
+    print("Output file is:", outputfile)
+    print("Exclude file is:", excludefile)
     with open(inputfile) as f:
         accounts = f.readlines()
     # you may also want to remove whitespace characters like `\n` at the end of each line
@@ -102,7 +103,7 @@ def main(argv):
     for account in accounts:
         aaccount = account.split("|")
         login_mailbox(aaccount)
-        print aaccount[2]
+        print(aaccount[2])
 
 if __name__ == "__main__":
    main(sys.argv[1:])
