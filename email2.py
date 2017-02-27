@@ -1,3 +1,4 @@
+#For Python 3+
 #This is a script created thanks to
 #https://gist.github.com/robulouski/7441883
 #
@@ -18,11 +19,6 @@ EMAIL_FOLDER = ["INBOX","SENT"]
 
 
 def process_mailbox(M):
-    """
-    Do something with emails messages in the folder.  
-    For the sake of this example, print some headers.
-    """
-
     rv, data = M.search(None, "ALL")
     if rv != 'OK':
         print("No messages found!")
@@ -37,9 +33,27 @@ def process_mailbox(M):
         msg = email.message_from_bytes(data[0][1])
         hdr = email.header.make_header(email.header.decode_header(msg['FROM']))
         from_mail = str(hdr)
-        print('Message %s: %s' % (num, from_mail))
-        print('CC:', msg['CC'])
-        print('BCC:', msg['BCC'])
+        try:
+            for el in msg['TO'].split(','):
+                m = re.search('<(.+)>', el)
+                if m:
+                    print('TO:', m.group(1))
+        except Exception as e:
+            print('TO: NOT FOUND')
+        try:
+            for el in msg['CC'].split(','):
+                m = re.search('<(.+)>', el)
+                if m:
+                    print('CC:', m.group(1))
+        except Exception as e:
+            print('CC: NOT FOUND')
+        try:
+            for el in msg['BCC'].split(','):
+                m = re.search('<(.+)>', el)
+                if m:
+                    print('BCC:', m.group(1))
+        except Exception as e:
+            print('BCC: NOT FOUND')
 
 
 def login_mailbox(account):
@@ -61,7 +75,7 @@ def login_mailbox(account):
         print(mailbox)
         rv, data = M.select(mailbox)
         if rv == 'OK':
-            print("Processing mailbox...\n")
+            print("Processing ", mailbox)
             process_mailbox(M)
             M.close()
         else:
@@ -102,8 +116,8 @@ def main(argv):
     accounts = [x.strip() for x in accounts] 
     for account in accounts:
         aaccount = account.split("|")
+        print("In proccess: ",aaccount[2])
         login_mailbox(aaccount)
-        print(aaccount[2])
 
 if __name__ == "__main__":
    main(sys.argv[1:])
